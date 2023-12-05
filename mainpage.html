@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Page</title>
+</head>
+<body>
+    <h1>Welcome to the super secure website!</h1>
+    <p>Browse around as you please</p>
+    <br>
+    <div>
+        {% for file in files %}
+            <div><b><a href="/file?name={{file['name']}}&r={{file['r']}}&s={{file['s']}}">{{file['name']}}</a></b></div>
+        {% endfor %}
+    </div>
+</body>
+</html>

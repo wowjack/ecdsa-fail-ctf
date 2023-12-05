@@ -1,0 +1,39 @@
+
+# Signatures are generated through the following process: 
+
+# Note that this is elliptic curve point multiplication
+# So base_point is a point on the curve and .x denotes getting the x coordinate of the resulting point
+
+r = (nonce * base_point).x % order
+
+h = hash_and_truncate(message)
+
+
+# Note that nonce^-1 denotes the multiplicative inverse of nonce mod n, not 1/nonce
+# This can be done in python using pow(nonce, -1, order) (not math.pow)
+
+s = (h + r*sec_key)*(nonce^-1) % order
+
+
+# Since the same nonce was used for multiple signatures, r is the same across those signatures
+# You can calculate hash_and_truncate yourself for different messages
+# The s parameter of the signature is exposed in the query parameters of different file links
+# The secret key sec_key is naturally the same across signatures
+# The order is known since it is exposed in the source code of app.py
+# Using all this you can calculate the nonce
+
+s1 = (h1 + r*sec_key)*(nonce^-1) mod order        s2 = (h2 + r*sec_key)*(nonce^-1) mod order
+s1*nonce = h1 + r*sec_key mod order               s2*nonce = h2 + r*sec_key mod order
+s1*nonce - h1 = r*sec_key mod order               s2*nonce - h2 = r*sec_key mod order
+
+                        s1*nonce - h1 = s2*nonce - h2 mod order
+                        s1*nonce - s2*nonce = h1 - h2 mod order
+                        (s1 - s2)*nonce = h1 - h2 mod order
+                        nonce = (h1 - h2)*(s1 - s2)^-1 mod order
+
+# Once you have recovered the nonce, its easy to recover the secret key
+
+s1 = (h1 + r*sec_key)*(nonce^-1) mod order
+(s1*nonce - h1)*(r^-1) = sec_key mod order
+
+# And once you have the secret key you can generate your own signatures!

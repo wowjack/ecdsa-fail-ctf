@@ -1,0 +1,4 @@
+Something suspicious is happening with the r query parameter when accessing different files.
+r is part of the signature, so it should probably be changing for different files, but it doesn't...
+
+Maybe check out how signatures are generated in ecdsa.py

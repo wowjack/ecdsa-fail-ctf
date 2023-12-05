@@ -1,0 +1,7 @@
+I'm pretty bad a cryptography, so I forgot to change the nonce for each signature I generated.
+Unfortunately this implementation of ecdsa is pretty vulnerable to nonce reuse.
+
+If you can figure out what the reused nonce is, you can figure out what my secret key is. Doh!
+You should definitely check out how the signatures are generated in ecdsa.py
+
+You'll also need to replicate my method of hashing and truncating the message to be signed.
