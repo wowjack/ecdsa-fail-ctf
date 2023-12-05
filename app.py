@@ -22,7 +22,7 @@ blocked_files = ["sec_key.txt", "flag.txt", "solution.py"]
 # Get all files in the cwd and omit the files that are blocked
 allowed_files = [f for f in listdir(getcwd()) if f not in blocked_files and isfile(f)]
 # Sign the names of all the files that are allowed to be accessed
-signatures = [sign(filename, curve, base_point, order, nonce, (sec_key, pub_key)) for filename in allowed_files]
+signatures = [sign(filename, curve, base_point, order, nonce, sec_key, pub_key) for filename in allowed_files]
 # Pair up the filenames and their associated signatures
 names_and_sigs = [{"name": name, "r": sig[1], "s": sig[2]} for name, sig in zip(allowed_files, signatures)]
 
@@ -35,21 +35,29 @@ def main_page():
 @app.route("/file", methods=["GET"])
 def show_file():
    params = request.args.to_dict()
-   filename = params['name']
-   signature = (pub_key, int(params['r']), int(params['s']))
+   filename = params.get('name', '')
+   try:
+      r = int(params.get('r', 0), base=10)
+      s = int(params.get('s', 0), base=10)
+   except:
+      r, s = 0, 0
+   
 
+   # Make sure the file actually exists and the signature is correct
+   if not isfile(filename):
+      return render_template("filepage.html", name=filename, contents=f"{filename} does not exist!")
+   try:
+      if not verify(filename, curve, base_point, order, pub_key, r, s):
+         return render_template("filepage.html", name=filename, contents=f"Invalid signature! You're not allowed to access {filename}")
+   except:
+      return render_template("filepage.html", name=filename, contents=f"Invalid signature! You're not allowed to access {filename}")
+   
 
-   # Make sure the file actually exists
-   if isfile(filename):
-      # Validate the signature to make sure you are allowed to access the file
-      if verify(filename, curve, base_point, order, signature):
-         with open(filename) as f:
-            file_contents = f.read()
-      else:
-         file_contents = f"Invalid signature! You're not allowed to access {filename}"
-   else:
-      file_contents = f"{filename} does not exist!"
+   with open(filename) as f:
+      file_contents = f.read()
 
    return render_template("filepage.html", name=filename, contents=file_contents)
 
-#app.run(host='0.0.0.0', port=5000)
+
+if __name__ == "__main__":
+   app.run(host='0.0.0.0', port=5000, debug=True)

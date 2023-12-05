@@ -8,27 +8,25 @@ from hashlib import sha256
 
 #Create a digital signature for the string message using a given curve with a distinguished
 #point P which generates a prime order subgroup of size n.
-def sign(message, curve, P, n, nonce, keypair):
+def sign(message, curve, base_point, order, nonce, sec_key, pub_key):
     #Extract the private and public keys, and compute z by hashing the message.
-    d, Q = keypair
-    z = hash_and_truncate(message, n)
+    z = hash_and_truncate(message, order)
     r, s = 0, 0
     while r == 0 or s == 0:
-        R = curve.mult(P, nonce)
-        r = R.x % n
-        s = (mult_inv(nonce, n) * (z + r*d)) % n
+        R = curve.mult(base_point, nonce)
+        r = R.x % order
+        s = (mult_inv(nonce, order) * (z + r*sec_key)) % order
     #print('ECDSA sig of \"' + message+ '\" : (Q, r, s) = (' + str(Q) + ', ' + str(r) + ', ' + str(s) + ')')
-    return (Q, r, s)
+    return (pub_key, r, s)
 
-#Verify the string message is authentic, given an ECDSA signature generated using a curve with
-#a distinguished point P that generates a prime order subgroup of size n.
-def verify(message, curve, P, n, sig):
-    Q, r, s = sig
+
+#Verify that the signature of a message is valid
+def verify(message, curve, base_point, n, pub_key, r, s):
     #Confirm that Q is on the curve.
-    if Q.is_infinite() or not curve.contains(Q):
+    if pub_key.is_infinite() or not curve.contains(pub_key):
         return False
     #Confirm that Q has order that divides n.
-    if not curve.mult(Q,n).is_infinite():
+    if not curve.mult(pub_key,n).is_infinite():
         return False
     #Confirm that r and s are at least in the acceptable range.
     if r > n or s > n:
@@ -38,7 +36,7 @@ def verify(message, curve, P, n, sig):
     z = hash_and_truncate(message, n)
     w = mult_inv(s, n) % n
     u_1, u_2 = z * w % n, r * w % n
-    C_1, C_2 = curve.mult(P, u_1), curve.mult(Q, u_2)
+    C_1, C_2 = curve.mult(base_point, u_1), curve.mult(pub_key, u_2)
     C = curve.add(C_1, C_2)
     return r % n == C.x % n
 
@@ -50,6 +48,9 @@ def hash_and_truncate(message, n):
     return int(b, 2)
 
 
+#Compute the multiplicative inverse mod n of a with 0 < a < n.
+def mult_inv(a, n):
+    return pow(a, -1, n)
 
 
 # THE REST OF THIS IS JUST ELLIPTIC CURVE LOGIC (not important)
@@ -181,7 +182,3 @@ class CurveOverFp(Curve):
         x = (ld*ld - self.a - P_1.x - P_2.x) % self.char
         y = (-ld*x - nu) % self.char
         return Point(x,y)
-
-#Compute the multiplicative inverse mod n of a with 0 < a < n.
-def mult_inv(a, n):
-    return pow(a, -1, n)
