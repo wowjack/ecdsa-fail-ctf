@@ -52,4 +52,4 @@ def show_file():
 
    return render_template("filepage.html", name=filename, contents=file_contents)
 
-app.run(host='0.0.0.0', port=5000)
+#app.run(host='0.0.0.0', port=5000)
