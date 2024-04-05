@@ -1,4 +1,5 @@
-Something suspicious is happening with the r query parameter when accessing different files.
-r is part of the signature, so it should probably be changing for different files, but it doesn't...
+Something suspicious is happening with the query parameters when accessing different files.
 
-Maybe check out how signatures are generated in ecdsa.py
+The `s` query parameter is different for each file, but the `r` parameter stays the same.
+
+What are `s` and `r` and how are they created and used?
